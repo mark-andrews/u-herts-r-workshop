@@ -1,0 +1,1041 @@
+---
+title: "An Introduction to R: Part I^[These slides are not intended to be self-contained and comprehensive, but just aim to provide some of the workshop's content. Elaborations and explanations will be provided in the workshop itself.]"
+author: |
+  | Mark Andrews
+  | Psychology Department, Nottingham Trent University
+  |   
+  | \faTwitter\ ```@xmjandrews```
+  | \faEnvelopeO\  ```mark.andrews@ntu.ac.uk```
+  | \faGithub\ ```https://github.com/mark-andrews/u-herts-r-workshop```
+fontsize: 10pt
+output:
+ beamer_presentation:
+  keep_tex: true
+  fonttheme: "serif"
+  includes:
+   in_header: slides_preamble.tex
+---
+
+
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+options(scipen=9)
+set.seed(42)
+
+library(dplyr)
+library(stringr)
+
+available_packages <- available.packages(repos = "http://cran.us.r-project.org") %>% as_tibble()
+
+open_licences <- str_detect(available_packages$License, 
+                            regex('gpl|bsd|mit|apache|cc|GNU|artistic', ignore_case = T)) %>% 
+  mean()
+```
+
+# What is R and why should you care
+
+* R is a program for doing statistics and data analysis.
+* R's advantages or selling points relative to other programs (e.g, SPSS, SAS, Stata, Minitab,
+Python, Matlab, Maple, Mathematica, Tableau, Excel, SQL, and many others) come down to three
+inter-related factors:
+  * It is immensely powerful.
+  * It is open-source.
+  * It is very and increasingly widely used.
+
+# R: A power tool for data analysis
+
+The range and depth of statistical analyses and general data analyses that can
+be accomplished with R is immense.
+
+* Built into R are virtually the entire repertoire
+  of widely known and used statistical methods. 
+
+* Also built in to R is an extensive graphics library.
+
+* R has a vast set of add-on or contributed
+  packages. There are presently 
+  `r nrow(available_packages)` additional contributed
+  packages.  
+  
+* R is a programming language that is specialized to efficiently
+  manipulate and perform calculations on data.  
+
+* The R programming language itself can be extended by interfacing with other
+  programming languages like C, C++, Fortran, Python, and high performance computing or big
+  data tools like Hadoop, Spark, SQL. 
+
+# R: Open source software
+
+* R is free and open source software, distributed according to the GNU
+public license. 
+* Likewise, virtually all of contributed R packages are likewise free and open source.
+* In practical terms, this means that is freely available for everyone to use, now and forever, on more
+or less any device they choose.
+* Open source software always has the potential to *go viral* and
+develop a large self-sustaining community of user/developers. This has arguably happened with R.
+
+# R: Popularity and widespread use
+
+* When it comes to the computational implementation of modern statistical
+methods, R is the de facto standard. For example, the
+\href{https://www.jstatsoft.org}{Journal of Statistical Software} is
+overwhelmingly dominated by programs written in R.
+* R is also currently very highly ranked according to many rankings of
+widely used programming languages of any kind. It ranked in the top 10 or top 20 
+most widely used programming languages. 
+* R is ranked as one of the top five
+most popular data science programs in jobs for data scientists, and in
+multiple surveys of data scientists, it is often ranked as the first or
+second mostly widely used data science tool.
+
+# A guided tour of RStudio
+
+```{r echo=FALSE, out.width='100%'}
+knitr::include_graphics('./rstudio_with_editor.png')
+```
+
+# Introducing R commands
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, prompt = TRUE, warning = FALSE, message = FALSE, comment='#>')
+
+# Thanks to 
+# https://github.com/ramnathv/slidify/issues/189#issuecomment-15850008
+hook1 <- function(x){ gsub("```\n*```r*\n*", "", x) }
+hook2 <- function(x){ gsub("```\n+```\n", "", x) }
+knitr::knit_hooks$set(document = hook1)
+
+```
+
+* A useful way to think about R, and not an inaccurate one either, is that it is
+simply a calculator.
+```{r}
+2 + 2 # addition
+3 - 5 # subtraction
+3 * 2 # multiplication
+4 / 3 # division
+(2 + 2) ^ (3 / 3.5) # exponents and brackets
+```
+
+#  Equality/inequality operations
+
+* Testing for the equality or inequality of pairs of numbers,
+already starts to go beyond the usual capabilities of handheld calculator.
+
+```{r}
+12 == (6 * 2)         # test for equality
+(3 * 4) != (18 - 7)   # test for inequality
+3 < 10                # less than
+(2 * 5) <= 10         # less than or equal
+```
+
+# Logical values and logical operations
+
+* In the previous step, the results are returned as either `TRUE` or `FALSE`. These are logical or *Boolean*
+values.
+* Just as we can represent numbers and operations on
+numbers, so too can we have two logical values, `TRUE` and `FALSE` (always written in
+all uppercase), and Boolean operations (*and*, *or*, and *not*) on logical values.
+```{r}
+TRUE & FALSE  # logical and
+TRUE | TRUE   # logical or
+!TRUE         # logical not
+(TRUE | !TRUE) & !FALSE
+```
+
+# Variables and assignment
+
+* If we type the following at the command prompt and then press Enter, the result is displayed but not stored.
+```{r}
+(12/3.5)^2 + (1/2.5)^3 + (1 + 2 + 3)^0.33
+```
+
+* We can, however, assign the value of the above calculation to a variable named `x`.
+```{r}
+x <- (12/3.5)^2 + (1/2.5)^3 + (1 + 2 + 3)^0.33           
+```
+
+* Now, we can use `x` as is it were a number.
+```{r}
+x
+x ^ 2
+x * 3.6
+```
+
+# Assignment rules
+
+* In general, the assignment rule is 
+```
+name <- expression
+```
+The `expression` is any R code that returns some value.
+
+* The `name` must consist of letters, numbers, dots, and underscores. 
+``` 
+x123   # acceptable
+.x
+x_y_z
+xXx_123
+```
+* It must begin with a letter or a dot that is not followed by a number. 
+``` 
+_x   # not acceptable
+.2x 
+x-y-z
+```
+* The recommendation is to use names that are
+meaningful, relatively short, without dots (using `_` instead for punctuation), and primarily consisting 
+of lowercase characters.
+
+
+# Vectors
+
+* Vectors are one dimensional sequences of values.
+* For example, if we want to
+create a vector of the first 6 primes numbers, we could do the following.
+```{r}
+primes <- c(2, 3, 5, 7, 11, 13)
+```
+* We can now perform operations (arithmetic, logical, etc) on the `primes` vector.
+```{r}
+primes + 1
+primes / 2
+primes == 3
+primes >= 7
+```
+
+# Indexing vectors
+
+* For any vector, we can refer to individual elements using indexing
+operations.  
+```{r}
+primes[1]
+primes[5]
+```
+
+* If we want to refer to sets of elements, rather than just individual elements,
+we can use vectors (made with the `c()` function) inside the indexing square
+brackets. 
+```{r}
+primes[c(3, 5, 2)]
+```
+
+* If we use a negative valued index, we can refer to or all elements *except* one.
+```{r}
+primes[-1]
+primes[-2]
+```
+
+# Vector types
+
+* A vector be a sequence of numbers, logical values, or characters.
+```{r}
+nation <- c('ireland', 'england', 'scotland', 'wales')
+```
+* We can index this vector as we did with a vector of numbers.
+```{r}
+nation[1]
+nation[2:3]
+nation == 'ireland'
+```
+
+* The `class` function in R will identify the data type of the vector.
+```{r}
+class(primes)
+class(nation)
+class(nation == 'ireland')
+```
+
+# Data frames
+
+* Data frames are rectangular data structures; they have certain number of
+columns, and each column has the same number of rows. Each column is in fact a
+vector.
+
+* Usually, data frames are created when read in the contents of a data file, but we can
+produce them on the command line with the `data.frame()`.
+```{r}
+Df <- data.frame(name = c('billy', 'joe', 'bob'), 
+                 age = c(21, 29, 23))
+Df
+```
+
+# Indexing data frames
+
+* We can refer to elements of a data frame in different ways.
+* The simplest is to use double indices, one for the rows, one for the columns. 
+```{r}
+Df[3, 2] # row 3, col 2
+Df[c(1, 3), 2] # rows 1 and 3, col 2
+Df[1,] # row 1, all cols
+Df[, 2] # all rows, col 2
+```
+
+
+# Indexing data frames (contined)
+
+* We could also refer to the column by name. To do so, we
+could use the following `$` notation.
+```{r}
+Df$age
+```
+* An alternative syntax that accompishes the same thing is to use
+*double* square brackets as follows.
+```{r}
+Df[['age']]
+```
+* A *single* square brackets, we would
+obtain the following.
+```{r}
+Df['age']
+```
+
+# Functions
+
+* In functions, we put data in, calculations or
+done to or using this data, and new data, perhaps just a single
+value, is then returned.
+* There are probably hundreds of thousands of functions in R.
+* For example, 
+```{r}
+length(primes)
+sum(primes)
+mean(primes)
+median(primes)
+sd(primes)
+var(primes)
+```
+
+# Custom functions
+
+* R makes it easy to create new functions. 
+```{r}
+my_mean <- function(x){ sum(x)/length(x)}
+```
+* This `my_mean` takes a vector as
+input and divides its sum by the number of elements in it. It then returns this values. The `x` is a
+placeholder for whatever variable we input into the function. 
+* We would use it just as we would use `mean`.
+```{r}
+my_mean(primes)
+```
+
+
+# Writing R scripts
+
+* Scripts are files where we write R commands, which can be then saved for later
+use.
+* You can bring up RStudio's script editor with Ctrl+Shift+N, or go to the
+File/ New File/ R script, or click on the New icon on the left of
+the taskbar below the menu and choose R script.
+
+* In a script, you can have as many lines of code as you wish, and there can be
+as many blank lines as you wish.  
+```{#numCode .R .numberLines}
+composites <- c(4, 6, 8, 9, 10, 12)
+
+composites_plus_one <- composites + 1
+
+composites_minus_one <- composites - 1
+```
+* If you place the cursor on line 1, you can then click the Run icon, or press the Ctrl+Enter keys.
+
+# Writing R scripts (continued)
+
+One reason why writings in scripts is very practically
+valuable, even if you don't wish to save the scripts, is when you are write long
+and complex commands.  
+```{.R .numberLines}
+Df <- data.frame(name = c('jane', 'joe', 'billy'),
+                 age = c(23, 27, 24),
+                 sex = c('female', 'male', 'male'),
+                 occupation = c('tinker', 'tailor', 'spy')
+)
+```
+We can execute this command as if it were on a single line by placing the cursor
+anywhere on any line and pressing Ctrl+Enter.
+
+# Code comments
+
+* An almost universal feature of programming language is the option to
+write *comments* in the code files. 
+* A comment allows you write to notes or
+comments around the code that is then skipped over when the script or the code
+lines are being executed. 
+* In R, anything following the `#` symbol on any line is 
+treated as a comment. 
+```{.R .numberLines}
+# Here is a data frame with four variables.
+# The variables are name, age, sex, occupation.
+Df <- data.frame(name = c('jane', 'joe', 'billy'),
+                 # This line is a comment too.
+                 age = c(23, 27, 24), # Another comment. 
+                 sex = c('female','male', 'male'),
+                 occupation = c('tinker', 'tailor', 'spy')
+)
+
+```
+
+# Packages
+
+* There are presently 
+  `r nrow(available_packages)` contributed
+  packages in R.
+  
+* The easiest way to install a package is to click the  Install button on
+the top left of the *Packages* window in the lower right pane.
+
+* You can also install a package or packages with the `install.packages` command.
+```{r, eval=FALSE}
+install.packages("dplyr")
+install.packages(c("dplyr", "tidyr", "ggplot2"))
+```
+  
+* Having installed a package, it must be loaded to be used. This can be done by clicking the tick box before the package name in the *Packages* window, or use the `library` command.
+```{r, eval=FALSE}
+library("tidyverse")
+```
+
+# Reading in data
+
+* R allows you to import data from a very large
+variety of data file types, including from other statistics programs like SPSS,
+Stata, SAS, Minitab, and so on, and common file formats like `.xlsx` and `.csv`.
+
+* When learning R initially, the easiest way to import data is using the Import Dataset button in the Environment window.
+
+* If we use the *From Text (readr)...* option, it runs the `read_csv` R command, which we can run ourselves on the command line, or write in a script.
+
+```{r}
+library(readr)
+blp_df <- read_csv("data/blp-trials-short.txt")
+```
+
+# Viewing data
+
+
+* The easiest way to view a data frames is to type its name.
+
+
+```{r}
+blp_df
+```
+
+
+# Viewing data (continued)
+
+* Another option to view a data frame is to `glimpse` it.
+
+```{r}
+glimpse(blp_df)
+```
+
+
+# Summarizing data with `summary`
+
+* An easy way to summarize a data frame is with `summary`.
+
+```{r}
+summary(blp_df)
+```
+  
+# Data wrangling tools in R
+
+* There are many tools in R for doing data wrangling. Here, we will focus of a
+core set of inter-related `tidyverse` tools. 
+* We'll begin with commands available in the `dplyr` package, particularly its so-called *verbs* such as the following.
+
+  * select
+  * rename
+  * slice
+  * filter
+  * mutate
+  * arrange
+  * group_by
+  * summarize
+
+* All of these tools are can be combined together using the `%>%` pipe operator
+
+
+
+
+# Selecting variables with `select`
+
+* The `dplyr`
+command `select` allows us to select variables from a data frame we want. 
+
+```{r}
+select(blp_df, participant, lex, resp, rt)
+```
+
+
+# Selecting variables with `select`
+
+* We can select a range of variables by specifying the first and last variables in the range with a `:` between them as follows.
+```{r}
+select(blp_df, spell:prev.rt)
+```
+
+
+
+# Selecting variables with `select`
+
+* We can also select a range of variables using indices as in the following example.
+```{r}
+select(blp_df, 2:5) # columns 2 to 5
+```
+
+
+# Selecting variables with `select`
+
+* We can select variables according to the character or characters that they begin with. 
+```{r}
+select(blp_df, starts_with('p'))
+```
+
+# Selecting variables with `select`
+
+* We can select variables by the characters they end with.
+```{r}
+select(blp_df, ends_with('t'))
+```
+
+# Selecting variables with `select`
+
+* We can select variables that contain a certain set of characters in any position. 
+```{r}
+select(blp_df, contains('rt'))
+```
+
+
+# Selecting variables with `select`
+
+* We can select variables using *regular expressions*. 
+* For example, the regular expression `^rt|rt$` will match the `rt` if it begins or ends a string. 
+```{r}
+select(blp_df, matches('^rt|rt$'))  
+```
+
+
+# Removing variables with `select`
+
+* We can use `select` to *remove* variables as well as select them. To remove a variable, we precede its name with a minus sign. 
+```{r}
+select(blp_df, -participant) # remove `participant`
+```
+
+# Removing variables with `select`
+
+* To remove variables indexed 2 to 6, we would do the following.
+```{r}
+select(blp_df, -(2:6))
+```
+
+
+# Reording variables with `select` and `everything()`
+
+* We can rearrange variables by selecting some and then using `everything()` for the others.
+```{r}
+select(blp_df, spell, participant, resp, everything())
+```
+
+# Renaming with `rename`
+
+* When we select individual variables with `select`, we can rename them too.
+```{r}
+select(blp_df, subject=participant, reaction_time=rt)
+```
+* But this just return the selected variables.
+
+# Renaming with `rename`
+
+* If we want to rename some variables, and get a data frame with all variables, including the renamed ones, we should use `rename`.
+```{r}
+rename(blp_df, subject=participant, reaction_time=rt)
+```
+
+# Selecting observations with `slice`
+
+* To select rows 10, 20, 50, 100, 500:
+```{r}
+slice(blp_df, c(10, 20, 50, 100, 500))
+```
+
+# Selecting observations with `slice`
+
+* To select rows 10 to 100 inclusive:
+```{r}
+slice(blp_df, 10:100)
+```
+
+# Selecting observations with `slice`
+
+A useful `dplyr` function that can be used in `slice` and elsewhere is `n()`, which gives the number of observations in the data frame. 
+```{r}
+slice(blp_df, 600:n())
+```
+
+# Dropping observations with `slice`
+
+* We can drop the first 10 observations as follows.
+```{r}
+slice(blp_df, -(1:10))
+```
+
+# Selecting observations with `filter`
+
+* The `filter` command is a powerful means to filter (i.e., to filter in, not filter out) observations according to their values. 
+* For example, 
+we can select all the observations where the `lex` variable is `N`.
+```{r}
+filter(blp_df, lex == 'N')
+```
+
+# Selecting observations with `filter`
+
+* We can filter by multiple conditions by listing each one with commas between them. 
+
+```{r}
+filter(blp_df, lex == 'N', resp=='W')
+```
+
+
+# Selecting observations with `filter`
+
+* We can make a *disjunction* of conditions for filtering using the logical-or symbol `|`. 
+* For example, here we select observations where `rt.raw` is less than 500 *or* greater than 1000.
+```{r}
+filter(blp_df, rt.raw < 500 | rt.raw > 1000)
+```
+
+# Selecting observations with `filter`
+
+* here we filter observations where values of `rt.raw` is *in* the set on integers 500 to 510.
+```{r}
+filter(blp_df, rt.raw %in% 500:510)
+```
+
+
+# Selecting observations with `filter`
+
+In general, we may filter the observations by creating complex Boolean conditionals
+```{r}
+filter(blp_df, 
+       lex == 'W', 
+       str_length(spell) < 5 & (resp != lex | rt.raw > 900))
+```
+
+
+# Changing variables and values using `mutate`
+
+* The `mutate` commnd is a very powerful tool in the `dplyr` toolbox. 
+* As an example, we can create a new variable `acc` that takes the value of `TRUE`
+whenever `lex` and `resp` have the same value as follows.
+```{r}
+mutate(blp_df, acc = lex == resp)
+```
+
+# Changing variables and values using `mutate`
+
+* We can also create multiple new variable at the same time as in the following example.
+```{r}
+mutate(blp_df, 
+       acc = lex == resp, 
+       fast = rt.raw < mean(rt.raw, na.rm=TRUE))
+```
+
+# Sorting with `arrange`
+
+* Sorting observations in a data frame is easily accomplished with `arrange`. 
+```{r}
+arrange(blp_df, participant, spell) # sort by `participant`, then `spell`
+```
+
+# Sorting with `arrange`
+
+* We can sort by the reverse order of any variable by using the `desc`. 
+```{r}
+arrange(blp_df, participant, desc(spell))
+```
+
+
+# Summarizing with `summarize`
+
+* The `summarize` (or `summarise`) function allows us to calculate summary statistics.
+```{r}
+summarize(blp_df, 
+          mean_rt = mean(rt, na.rm = T),
+          median_rt = median(rt, na.rm = T),
+          sd_rt.raw = sd(rt.raw, na.rm = T)
+)
+```
+
+
+# Summarizing with `summarize` and `group_by`
+
+* Combined with `group_by`, `summarize` allows us to calculate summary statistics by group
+```{r}
+summarize(group_by(blp_df, lex),
+          mean_rt = mean(rt, na.rm = T),
+          median_rt = median(rt, na.rm = T),
+          sd_rt.raw = sd(rt.raw, na.rm = T)
+)
+```
+
+# The `%>%` operator
+
+* The `%>%` operator in R is known as the *pipe*.
+* In RStudio, the keyboard shortcut Ctrl+Shift+M types `%>%`.
+* To understand pipes, let us begin with a simple example of nested functions. 
+```{r}
+primes <- c(2, 3, 5, 7, 11, 13, 17, 19, 23, 29)
+```
+```{r}
+sum(primes) # The sum of `primes`
+```
+```{r}
+sqrt(sum(primes)) # The sqrt of the sum
+```
+```{r}
+log(sqrt(sum(primes))) # The log of the sqrt of the sum
+```
+
+# The `%>%` operator
+
+* The `%>%` allows us to rewrite nested functions as *pipelines*.
+* This 
+```{r}
+log(sqrt(sum(primes))) # The log of the sqrt of the sum
+```
+is equivalent to this
+```{r}
+primes %>% sum() %>% sqrt() %>% log()
+```
+
+# Using `%>%` with `dplyr`
+
+* When used with `dplyr` verbs, the `%>%` provides a mini-language for data wrangling.
+```{r}
+blp_df %>%
+  mutate(accuracy = resp == lex,
+         stimulus = recode(lex, 'W'='word', 'N'='nonword')
+  ) %>% 
+  select(stimulus, item=spell, accuracy, speed=rt.raw) %>% 
+  arrange(speed) %>% 
+  head(5)
+```
+
+# Combining data frames with `bind`
+
+* A *bind* operation is a simple operation
+that either vertically stack data frames that share common variables, or 
+horizontally stack data frames that have the same number of observations.
+
+To illustrate, we will create three small data frames.
+```{r}
+Df_1 <- tibble(x = c(1, 2, 3),
+               y = c(2, 7, 1),
+               z = c(0, 2, 7))
+
+Df_2 <- tibble(y = c(5, 7),
+               z = c(6, 7),
+               x = c(1, 2))
+
+Df_3 <- tibble(a = c(5, 6, 1),
+               b = c('a', 'b', 'c'),
+               c = c(T, T, F))
+```
+
+
+# Combining data frames with `bind`
+
+* The `Df_1` and `Df_2` data frames share common variable names. They can 
+be vertically stacked using a `bind_rows` operation.
+```{r}
+bind_rows(Df_1, Df_2)
+```
+
+
+# Combining data frames with `bind`
+
+* The `Df_1` and `Df_3` data frames have the same number of observations and so can be stacked 
+side by side with a `bind_cols` operation.
+```{r}
+bind_cols(Df_1, Df_3)
+```
+
+
+# Combining data frames with `join`
+
+* A *join* operation is a common operation in relational 
+databases using SQL.
+* The `blp_df` has a variable `spell` that gives the identity of the stimulus. In a separate file, `blp-stimuli.csv` file, we have three additional variables for these
+stimuli. 
+```{r}
+stimuli <- read_csv('data/blp_stimuli.csv')
+stimuli
+```
+
+
+# Combining data frames with `join`
+
+* We can join these two data frames with `inner_join`.
+```{r}
+inner_join(blp_df, stimuli)
+```
+
+
+# Reshaping data with `tidyr`'s `gather` and `spread`
+
+* Consider the following data frame, which is in a *wide* format.
+```{r}
+(recall_df <- read_csv('data/repeated_measured_a.csv'))
+``` 
+
+# Reshaping data with `tidyr`'s `gather` and `spread`
+
+* We can convert it to a *long* format as follows:
+```{r}
+library(tidyr)
+gather(recall_df, key=condition, value=score, Neg:Pos)
+```
+
+# Reshaping data with `tidyr`'s `gather` and `spread`
+
+* The inverse of a `gather` is a `spread`. To do this, we supply the `key` and `value` variables, as defined in the `gather` operation. 
+```{r}
+recall_long_df <- gather(recall_df, key=condition, value=score, Neg:Pos)
+```
+
+
+```{r}
+spread(recall_long_df, key=condition, value=score)
+```
+
+
+# Plots and data visualiztion
+
+* The best way to data visualization in R is with `ggplot2`.
+```{r}
+library(ggplot2)
+```
+
+* `ggplot2` is package whose main function is `ggplot`.
+
+* `ggplot` is a *layered* plotting system where we map variables
+to aesthetic properties of a graphic and then add layers.
+
+
+# Scatterplot 
+
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+weight_df <- read_csv('data/weight.csv')
+
+ggplot(weight_df,
+       aes(x = height, y = weight)
+) + geom_point()
+```
+
+# Scatterplot with `gender` indicated by colour
+
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(weight_df,
+       aes(x = height, y = weight, col = gender)
+) + geom_point()
+```
+
+
+# Scatterplot with line of best fit
+
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(weight_df,
+       aes(x = height, y = weight)
+) + geom_point() + 
+  stat_smooth(method = 'lm')
+```
+
+
+# Scatterplot with line of best fit, for each value of `gender`
+
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(weight_df,
+       aes(x = height, y = weight, col = gender)
+) + geom_point() + stat_smooth(method = 'lm')
+```
+
+# Changing style of a plot
+
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(weight_df,
+       aes(x = height, y = weight, col = gender)
+) + geom_point() + stat_smooth(method = 'lm') +
+  xlab('Height') +
+  ylab('Weight') + 
+  theme_classic()
+```
+
+# Histograms
+
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(weight_df, 
+       aes(x = height)
+) + geom_histogram(col = 'white', binwidth = 2.54)
+```
+
+
+# Histograms
+
+* A *stacked* histogram
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(weight_df, 
+       aes(x = height, fill = gender)
+) + geom_histogram(col = 'white', binwidth = 2.54)
+```
+
+
+# Histograms
+
+* A *dodged* histogram
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(weight_df, 
+       aes(x = height, fill = gender)
+) + geom_histogram(col = 'white', binwidth = 2.54, 
+                   position = 'dodge')
+```
+
+
+# Histograms
+
+* A *filled* histogram
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(weight_df, 
+       aes(x = height, fill = gender)
+) + geom_histogram(col = 'white', binwidth = 2.54, 
+                   position = 'fill')
+```
+
+
+# Histograms
+
+* A *identity* histogram
+```{r, out.width='0.5\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(weight_df, 
+       aes(x = height, fill = gender)
+) + geom_histogram(col = 'white', binwidth = 2.54, 
+                   position = 'identity', alpha = 0.7)
+```
+
+
+# Barplots
+
+* *Barplots* are used for categorical variables.
+
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+titanic_df <- read_csv('data/TitanicSurvival.csv') %>% select(-X1)
+ggplot(titanic_df,
+       mapping = aes(x = passengerClass)
+) + geom_bar()
+```
+
+
+# Barplots
+
+* A *stacked* bar plot
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(titanic_df,
+       mapping = aes(x = passengerClass, fill=survived)
+) + geom_bar()
+```
+
+# Barplots 
+
+* A *filled* bar plot
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(titanic_df,
+       mapping = aes(x = passengerClass, fill=survived)
+) + geom_bar(position = 'fill')
+```
+
+
+# Barplots 
+
+* A *dodged* bar plot
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(titanic_df,
+       mapping = aes(x = passengerClass, fill=survived)
+) + geom_bar(position = 'dodge')
+```
+
+# Boxplots
+
+* We can draw Tukey box plots with `geom_boxplot`.
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+swiss_df <- read_csv('data/swiss.csv')
+ggplot(swiss_df,
+       mapping = aes(x = '', y = Fertility)
+) + geom_boxplot(width = 0.25)
+```
+
+
+# Boxplots
+
+
+* We can *jitter* etc.
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(swiss_df,
+       mapping = aes(x = '', y = Fertility)
+) + geom_boxplot(width = 0.25, outlier.shape = NA) +
+  geom_jitter(width = 0.1) +
+  coord_flip()
+```
+
+
+# Boxplots
+
+
+* We can have more than one boxplot.
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(swiss_df,
+       mapping = aes(x = catholic, y = Fertility, )
+) + geom_boxplot(width = 0.25, outlier.shape = NA) +
+  geom_jitter(width = 0.1)
+```
+
+# Boxplots
+
+
+* We can group by multiple variables at once.
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+toothgrowth_df <- read_csv('data/toothgrowth.csv')
+toothgrowth_df %>% 
+  ggplot(mapping = aes(x = dose, y = len, colour = supp)
+         ) + geom_boxplot(outlier.shape = NA, varwidth = T) + 
+             geom_jitter(position = position_jitterdodge(0.5), 
+                         size = 0.75) +
+  scale_x_discrete(limits=c('low', 'medium' ,'high'))
+```
+
+# Facet plots
+
+```{r, out.width='0.65\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+ggplot(titanic_df,
+       mapping = aes(x = passengerClass, fill = survived)
+) + geom_bar(position = 'dodge') +
+  facet_wrap(~sex)
+```
+
+# Facet plots
+
+```{r, out.width='0.5\\textwidth',out.extra='keepaspectratio', fig.align='center'}
+sleepstudy_df <- read_csv("data/sleepstudy.csv", 
+                       col_types = cols(Subject = col_character())
+)
+
+ggplot(sleepstudy_df,
+       mapping = aes(x = Days, y = Reaction, colour = Subject)
+) + geom_point() +
+  geom_smooth(method = 'lm', se = F) +
+  facet_wrap(~Subject) +
+  theme(legend.position = 'none')
+```
+
