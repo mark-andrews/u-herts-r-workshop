@@ -18,7 +18,7 @@ output:
 
 
 
-```{r setup, include=FALSE, message=FALSE}
+```{r setup, echo = F, message=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 options(scipen=9)
 set.seed(42)
@@ -28,9 +28,7 @@ library(stringr)
 
 available_packages <- available.packages(repos = "http://cran.us.r-project.org") %>% as_tibble()
 
-open_licences <- str_detect(available_packages$License, 
-                            regex('gpl|bsd|mit|apache|cc|GNU|artistic', ignore_case = T)) %>% 
-  mean()
+
 ```
 
 # What is R and why should you care
