@@ -10,7 +10,9 @@ Stan is a probabilistic programming language. Using the Stan language, you can d
 
 In general, Stan is a external program to R; it does not need to be used with R. However, one of the most common ways of using Stan is by using it through R and that is what we will be doing in this workshop.
 
-To use Stan with R, you need to install an R package called `rstan`. For Windows, instructions for installing Stan for use with R can be found here  https://github.com/stan-dev/rstan/wiki/Installing-RStan-on-Windows and for Macs, it is https://github.com/stan-dev/rstan/wiki/Installing-RStan-on-Mac-or-Linux.
+To use Stan with R, you need to install an R package called `rstan` see https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started.
+
+
 
 ## Installing brms
 
