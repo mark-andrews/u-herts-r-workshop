@@ -1,0 +1,382 @@
+---
+title: "An Introduction to R: Part II^[These slides are not intended to be self-contained and comprehensive, but just aim to provide some of the workshop's content. Elaborations and explanations will be provided in the workshop itself.]"
+author: |
+  | Mark Andrews
+  | Psychology Department, Nottingham Trent University
+  |   
+  | \faTwitter\ ```@xmjandrews```
+  | \faEnvelopeO\  ```mark.andrews@ntu.ac.uk```
+  | \faGithub\ ```https://github.com/mark-andrews/u-herts-r-workshop```
+fontsize: 10pt
+output:
+ beamer_presentation:
+  keep_tex: true
+  fonttheme: "serif"
+  includes:
+   in_header: slides_preamble.tex
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, prompt = TRUE, warning = FALSE, message = FALSE, comment='#>')
+
+# Thanks to 
+# https://github.com/ramnathv/slidify/issues/189#issuecomment-15850008
+hook1 <- function(x){ gsub("```\n*```r*\n*", "", x) }
+hook2 <- function(x){ gsub("```\n+```\n", "", x) }
+knitr::knit_hooks$set(document = hook1)
+
+```
+
+# Setup
+
+```{r}
+load('data/workshop_data.Rda')
+```
+
+# Independent samples t-test
+
+* We can use `t.test` for t-tests. 
+```{r}
+M <- t.test(height ~ gender, data = weight_df)
+M
+```
+* By default, we get the *Welch Two Sample t-test*. Use `var.equal=T` to obtain the independent samples t-test.
+```{r}
+M <- t.test(height ~ gender, var.equal = T, data = weight_df)
+```
+
+
+# Independent samples t-test
+
+
+* We can access the attributes of the t-test with e.g.
+```{r}
+M$statistic
+M$parameter
+M$p.value
+M$conf.in
+```
+
+# One sample t-test
+
+```{r}
+t.test(weight_df$weight, mu = 80)
+```
+
+# Paired samples t-test
+
+```{r}
+t.test(anorexia_df_cbt$Prewt, 
+       anorexia_df_cbt$Postwt,
+       paired = T)
+       
+```
+
+# Mann Whitney test
+
+```{r}
+wilcox.test(weight~gender, data=weight_df)
+```
+
+# Wilcoxon signed rank test
+
+```{r}
+wilcox.test(anorexia_df_cbt$Prewt, 
+            anorexia_df_cbt$Postwt,
+            paired = T)
+```
+
+
+# Correlation
+
+```{r}
+cor.test(~ weight + height, data = weight_df)
+```
+
+# Spearman's $\rho$
+
+```{r}
+cor.test(~ weight + height, 
+         method = 'spearman',
+         data = weight_df)
+```
+
+# Pearson's $\chi^2$
+
+```{r}
+(M <- chisq.test(titanic_survival))
+```
+As before, we can access properties of the test, e.g.
+```{r}
+M$expected
+```
+
+
+# Linear regression
+
+```{r}
+M <- lm(weight ~ height, data= weight_df)
+summary(M)
+```
+
+
+# Linear regression
+
+* We can get standardized residuals with `reghelper::beta`.
+```{r}
+library(reghelper)
+beta(M)
+```
+
+# Prediction in linear regression
+
+```{r}
+new_df <- data.frame(height = c(140, 150, 160))
+predict(M, newdata = new_df)
+```
+
+# Multiple linear regression
+
+```{r}
+M <- lm(price ~ area + bedrooms, data = houseprice_df)
+summary(M)
+```
+
+# Multiple linear regression
+
+* Multicolinearity
+```{r}
+library(car)
+car::vif(M)
+```
+* Prediction
+```{r}
+new_df <- data.frame(area = median(houseprice_df$area),
+                     bedrooms = c(1, 2, 3, 4, 5)
+)
+predict(M, newdata = new_df)
+```
+
+
+# Varying intercepts regression
+
+```{r}
+M_vi <- lm(weight ~ height + gender, data = weight_df)
+summary(M_vi)
+```
+
+
+# Varying slopes regression
+
+```{r}
+M_vs <- lm(weight ~ height * gender, data=weight_df)
+summary(M_vs)
+```
+
+
+# Model comparison
+
+* Model comparison of the varying intercepts and varying slopes models.
+```{r}
+anova(M_vi, M_vs)
+```
+
+
+# One-way Anova
+
+```{r}
+M <- aov(weight ~ group, data=plantgrowth_df)
+M
+```
+
+# One-way Anova
+
+* We can do Tukey's range test to perform multiple comparisons:
+```{r}
+TukeyHSD(M)
+```
+
+# One way Anova
+
+* Note that we can also we can do Anova using `lm()`:
+```{r}
+M <- lm(weight ~ group, data=PlantGrowth)
+anova(M)
+```
+
+# Two-way anova
+
+```{r}
+M <- aov(len ~ supp*dose, data=toothgrowth_df)
+```
+and we can also do 
+```{r, eval=F}
+TukeyHSD(M)
+```
+
+
+# Repeated measures Anova
+
+```{r}
+M <- aov(score ~ condition + Error(Subject/condition), data=recall_long_df)
+```
+
+Multiple comparisons, with Bonferroni correction
+```{r}
+
+with(recall_long_df,
+     pairwise.t.test(x=score, g=condition), 
+     p.adjust.methods='bonferroni', 
+     paired=T)
+```
+
+
+
+# Twoway repeated measures Anova
+```{r}
+M <- aov(Recall ~ Valence*Task + Error(Subject/(Task*Valence)), 
+         data=recall_long_df_2)
+M
+```
+
+
+# Multilevel models
+
+The repeated measures anova above can be done, and I think *should* be done, using multilevel models too.
+
+```{r}
+library(lme4)
+M <- lmer(Recall ~ Valence*Task + (1|Subject),
+          data=recall_long_df_2)
+summary(M)
+```
+
+
+
+# Random intercepts model
+
+* If we label our the reaction time, subject, and day on observation $i$ by $y_i$, $s_i \in \{1, 2 \ldots J\}$, and $x_i$, respectively, a random intercepts model of this data would be
+$$
+\begin{aligned}
+y_i \sim N(a_{s_i} + b x_i, \sigma^2),\quad\text{for all $i \in 1, 2\ldots n$}\\
+a_j \sim N(\alpha, \tau^2),\quad\text{for all $j \in 1, 2\ldots J$}
+\end{aligned}
+$$
+
+
+```{r}
+M_0 <- lmer(Reaction ~ Days + (1|Subject),
+            data = sleepstudy)
+```
+
+
+# Random slopes regression
+
+* A random slopes model of this data would be
+$$
+\begin{aligned}
+y_i \sim N(a + b_{s_i} x_i, \sigma^2),\quad\text{for all $i \in 1, 2\ldots n$}\\
+b_j \sim N(\beta, \tau_{\beta}^2),\quad\text{for all $j \in 1, 2\ldots J$}
+\end{aligned}
+$$
+
+
+```{r}
+M_1 <- lmer(Reaction ~ Days + (0 + Days|Subject),
+            data = sleepstudy)
+```
+
+# Random slopes and random intercepts
+
+$$
+\begin{aligned}
+y_i \sim N(a_{s_i} + b_{s_i} x_i, \sigma^2),\quad\text{for all $i \in 1, 2\ldots n$}\\
+a_j \sim N(\alpha, \tau_{\alpha}^2),\quad\text{for all $j \in 1, 2\ldots J$}\\
+b_j \sim N(\beta, \tau_{\beta}^2),\quad\text{for all $j \in 1, 2\ldots J$}
+\end{aligned}
+$$
+
+
+```{r}
+M_1 <- lmer(Reaction ~ Days + (1 + Days|Subject),
+            data = sleepstudy)
+```
+
+
+# Nested multilevel models
+
+
+* Sometimes we have groups nested in other groups.
+
+* In `science_df`, we have `class`, with values $\{1, 2, 3, 4\}$, nested in `school`, with values $\{1, 2 \ldots 41\}$. 
+
+* To model this nesting, we'd do the following:
+```{r}
+M_1 <- lmer(like ~ sex + PrivPub + (1|school/class), 
+          data = science_df)
+```
+which is identical to
+```{r}
+M_2 <- lmer(like ~ sex + PrivPub + (1|school) + (1|school:class), 
+          data = science_df)
+```
+
+# Nested models
+
+* If we use unique identifiers for `class`, i.e. `Class`, which takes values `1.1`, `1.2`, etc., then we can simply do
+```{r}
+M_3 <- lmer(like ~ sex + PrivPub + (1|school) + (1|Class), 
+          data = science_df)
+```
+
+# Crossed structures
+
+* When grouping variables are not nested, they are *crossed*. 
+
+```{r}
+M <- lmer(diameter ~ 1 + (1|plate) + (1|sample),
+          data=penicillin_df)
+```
+
+# Model comparison
+
+We proceed just like in the case of generalized linear models.
+```{r}
+M_null <- lmer(diameter ~ 1 + (1|sample),
+               data=penicillin_df)
+
+anova(M_null, M)
+
+```
+
+
+# Introducing \brms
+
+* \brms is an R package doing Bayesian general and generalized linear models, and general and generalized  multilevel variants.
+* To understand why \brms is so valuable, we must understand the following facts:
+  1. Bayes is best. No further discussion necessary.
+  1. Doing Bayesian data analysis, except for when using a prohibitively small set of models, 
+     requires Markov Chain Monte Carlo (\mcmc) samplers.
+  1. Writing your own \mcmc is either hard or very hard.
+  1. Probabilistic programming languages like Stan essentially write your \mcmc sampler      for any model you programmatically define. 
+  1. Although probabilistic programming languages reduce down the time and effort to 
+     obtain your sampler by orders of magnitude, they *still* require considerable time and 
+     effort relative to writing a single R command.
+* \brms allow you to write your Bayesian model (with some restrictions) using standard R regression commands. It then writes Stan code, which then writes and compiles your sampler.
+
+# Major features
+
+* Although ultimately more flexibility will be obtained using Stan, \brms is remarkably powerful:
+* It includes far more probability models for outcome variables than almost all other regression packages: gaussian, student, binomial, bernoulli, poisson, negbinomial, geometric, Gamma, skew_normal, lognormal, shifted_lognormal, exgaussian, wiener, inverse.gaussian, exponential, weibull, frechet, Beta, von_mises, asym_laplace, gen_extreme_value, categorical, cumulative, cratio, sratio, acat, hurdle_poisson, hurdle_negbinomial, hurdle_gamma, hurdle_lognormal, zero_inflated_binomial, zero_inflated_beta, zero_inflated_negbinomial, zero_inflated_poisson, and zero_one_inflated_beta.
+* It also allows for censored data, missing data, measurment error, nonlinear regression, probabilistic mixture models, *distributional* models (whereby all parameters of the outcome variables have predictors), and so on.
+
+# \brms example
+
+```{r, cache=TRUE}
+M <- lm(price ~ area + bedrooms, data = houseprice_df)
+library(brms)
+M_bayes <- brm(price ~ area + bedrooms, data = houseprice_df)
+```
+```
+
+
